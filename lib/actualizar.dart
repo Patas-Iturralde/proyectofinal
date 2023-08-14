@@ -3,17 +3,17 @@
   import 'package:image_picker/image_picker.dart';
   import 'dart:io';
 
-  class Ingreso extends StatefulWidget {
-    const Ingreso({Key? key}) : super(key: key);
+  class Actualizar extends StatefulWidget {
+    const Actualizar({Key? key}) : super(key: key);
 
     @override
-    State<Ingreso> createState() => _IngresoState();
+    State<Actualizar> createState() => _ActualizarState();
   }
 
   const List<String> lista = <String>['uno', 'dos', 'tres']; //Datos que se mostrararn en el combobox
   String? selectedValue;
 
-  class _IngresoState extends State<Ingreso> {
+  class _ActualizarState extends State<Actualizar> {
     String dropdownValue = lista.first;
     late DateTime selectedDate = DateTime.now();
     late File _image;
@@ -52,7 +52,7 @@
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             title: Row(
-              children: [Title(color: Colors.cyan, child: const Text("Ingreso"))],
+              children: [Title(color: Colors.cyan, child: const Text("Actualizar"))],
             ),
           ),
           body: Center(
