@@ -10,7 +10,7 @@ class Vista extends StatefulWidget {
   State<Vista> createState() => _VistaState();
 }
 
-showConfirmDelete(BuildContext context) {
+showConfirmDelete(BuildContext context, String lid) {
   Widget cancelButton = ElevatedButton(
     child: Text(
       "Cancelar",
@@ -43,7 +43,11 @@ showConfirmDelete(BuildContext context) {
       ),
     ),
     onPressed: () {
+      deleteLibro(lid);
       print("Eliminando..");
+
+      Navigator.pop(context, true);
+
       //Funcion de eliminar
     },
   );
@@ -66,6 +70,10 @@ showConfirmDelete(BuildContext context) {
 }
 
 class _VistaState extends State<Vista> {
+  Future<void> _refreshData() async {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,57 +87,62 @@ class _VistaState extends State<Vista> {
           future: getLibro(),
           builder: ((context, snapshot) {
             if (snapshot.hasData) {
-              return ListView.builder(
-                  itemCount: snapshot.data?.length,
-                  itemBuilder: (context, index) {
-                    var doc = snapshot.data?[index];
-                    var nombre = doc['nombre'];
-                    var descripcion = doc['descripcion'];
-                    var fecha = doc['fecha'];
-                    var imagenurl = doc['imagen'];
-                    var fechaLanzamiento = fecha.toDate();
+              return RefreshIndicator(
+                onRefresh: _refreshData,
+                child: ListView.builder(
+                    itemCount: snapshot.data?.length,
+                    itemBuilder: (context, index) {
+                      var doc = snapshot.data?[index];
+                      var lid = doc['lid'];
+                      var nombre = doc['nombre'];
+                      var descripcion = doc['descripcion'];
+                      var fecha = doc['fecha'];
+                      var imagenurl = doc['imagen'];
+                      var fechaLanzamiento = fecha.toDate();
 
-                    // Formatear la fecha usando Intl
-                    var formattedFechaLanzamiento =
-                        DateFormat.yMMMd().format(fechaLanzamiento);
+                      // Formatear la fecha usando Intl
+                      var formattedFechaLanzamiento =
+                          DateFormat.yMMMd().format(fechaLanzamiento);
 
-                    return Column(
-                      children: <Widget>[
-                        const Divider(),
-                        Text("$nombre"),
-                        ListTile(
-                          leading: Image.network(imagenurl),
-                          title: Text("$descripcion"),
-                          subtitle: Text("$formattedFechaLanzamiento"),
-                          trailing: SizedBox(
-                              width: 100,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  IconButton(
-                                    onPressed: () => Navigator.of(context)
-                                        .push(MaterialPageRoute(
-                                            builder: (context) => Actualizar(
-                                                  nombre: nombre,
-                                                  descripcion: descripcion,
-                                                  fecha: fechaLanzamiento,
-                                                  imagenurl: imagenurl,
-                                                ))),
-                                    icon: Icon(Icons.edit),
-                                  ),
-                                  IconButton(
-                                    onPressed: () async {
-                                      (showConfirmDelete(context));
-                                    },
-                                    icon: Icon(Icons.delete),
-                                  ),
-                                ],
-                              )),
-                        ),
-                        const Divider(),
-                      ],
-                    );
-                  });
+                      return Column(
+                        children: <Widget>[
+                          const Divider(),
+                          Text("$nombre"),
+                          ListTile(
+                            leading: Image.network(imagenurl),
+                            title: Text("$descripcion"),
+                            subtitle: Text("$formattedFechaLanzamiento"),
+                            trailing: SizedBox(
+                                width: 100,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                              builder: (context) => Actualizar(
+                                                    lid: lid,
+                                                    refreshPage: _refreshData,
+                                                  ))),
+                                      icon: Icon(Icons.edit),
+                                    ),
+                                    IconButton(
+                                      onPressed: () async {
+                                        (
+                                          showConfirmDelete(context, lid),
+                                          _refreshData()
+                                        );
+                                      },
+                                      icon: Icon(Icons.delete),
+                                    ),
+                                  ],
+                                )),
+                          ),
+                          const Divider(),
+                        ],
+                      );
+                    }),
+              );
             } else {
               return const Center(
                 child: CircularProgressIndicator(),

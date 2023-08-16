@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:segundointento/services/libro_services.dart';
 import 'package:segundointento/services/select_image.dart';
 import 'package:segundointento/services/upload_image.dart';
+import 'package:segundointento/models/libro_model.dart';
 import 'dart:io';
 
 class Ingreso extends StatefulWidget {
@@ -22,6 +23,22 @@ String? selectedValue;
 String? imageurl;
 
 class _IngresoState extends State<Ingreso> {
+  List<Result>? _lista;
+  //String fondo = "lib/image/icono.png";
+  Future<void> loadLibros() async {
+    LibroService service = LibroService();
+    _lista = await service.getLibros();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadLibros();
+  }
+
   File? imagen_to_upload;
 
   String descripcion = "";
@@ -82,24 +99,25 @@ class _IngresoState extends State<Ingreso> {
                     ),
                   ],
                 ),
-                items: lista
-                    .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ))
-                    .toList(),
+                items: _lista?.map((Result libro) {
+                  return DropdownMenuItem<String>(
+                    value: libro.title
+                        .toString(), // Usar el título del libro como valor
+                    child: Text(
+                      libro.title.toString(),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
                 value: selectedValue,
-                onChanged: (String? value) {
+                onChanged: (value) {
                   setState(() {
-                    selectedValue = value;
+                    selectedValue = value as String?;
                   });
                 },
                 buttonStyleData: ButtonStyleData(

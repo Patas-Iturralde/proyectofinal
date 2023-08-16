@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:segundointento/models/libro_model.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:developer' as developer;
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -8,9 +12,23 @@ Future<List> getLibro() async {
 
   QuerySnapshot queryLibro = await collectionReferenceLibro.get();
 
-  queryLibro.docs.forEach((documento) {
+  for (var doc in queryLibro.docs) {
+    final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    final book = {
+      "lid": doc.id,
+      "nombre": data['nombre'],
+      "descripcion": data['descripcion'],
+      "fecha": data['fecha'],
+      "imagen": data['imagen']
+    };
+
+    libro.add(book);
+  }
+
+  /*queryLibro.docs.forEach((documento) {
     libro.add(documento.data());
-  });
+  });*/
   return libro;
 }
 
@@ -23,4 +41,71 @@ Future<void> addLibro(String? nombre, String? descripcion,
     "fecha": timestamp,
     "imagen": imagen
   });
+}
+
+Future<List<Map<String, dynamic>>> getDataById(String documentId) async {
+  CollectionReference collection =
+      FirebaseFirestore.instance.collection('libro');
+  DocumentSnapshot snapshot = await collection.doc(documentId).get();
+
+  if (snapshot.exists) {
+    Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+    return [data]; // Retorna la lista con un solo elemento
+  } else {
+    return []; // Retorna una lista vacía si no se encuentra el documento
+  }
+}
+
+Future<void> updateLibro(String lid, String? nombre, String? descripcion,
+    DateTime selectedDate, String? imagen) async {
+  Timestamp timestamp = Timestamp.fromDate(selectedDate);
+  await db.collection("libro").doc(lid).set({
+    "nombre": nombre,
+    "descripcion": descripcion,
+    "fecha": timestamp,
+    "imagen": imagen
+  });
+}
+
+Future<void> deleteLibro(String lid) async {
+  await db.collection("libro").doc(lid).delete();
+}
+
+class LibroService {
+  LibroService();
+
+  Future<List<Result>?> getLibros() async {
+    List<Result> result = [];
+    try {
+      var url = Uri.https('gutendex.com', '/books');
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        dynamic jsonResponse = json.decode(response.body);
+
+        if (jsonResponse is List) {
+          // Verifica si la respuesta es una lista
+          for (var item in jsonResponse) {
+            var newLibro = Result.fromJson(item);
+            result.add(newLibro);
+          }
+        } else if (jsonResponse is Map) {
+          developer.log('Request failed with status: ${response.statusCode}.');
+          if (jsonResponse.containsKey("results")) {
+            List<dynamic> resultList = jsonResponse["results"];
+
+            for (var item in resultList) {
+              var newLibro = Result.fromJson(item);
+              result.add(newLibro);
+            }
+          }
+        }
+      } else {
+        developer.log('Request failed with status: ${response.statusCode}.');
+      }
+      return result;
+    } catch (ex) {
+      developer.log(ex.toString());
+      return null;
+    }
+  }
 }

@@ -1,23 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segundointento/services/libro_services.dart';
 import 'package:segundointento/services/select_image.dart';
 import 'package:segundointento/services/upload_image.dart';
+import 'package:segundointento/models/libro_model.dart';
 import 'dart:io';
 
 class Actualizar extends StatefulWidget {
-  final String nombre;
-  final String descripcion;
-  final DateTime fecha;
-  final String imagenurl;
-
+  final String lid;
+  final Function refreshPage;
   const Actualizar({
     Key? key,
-    required this.nombre,
-    required this.descripcion,
-    required this.fecha,
-    required this.imagenurl,
+    required this.lid,
+    required this.refreshPage,
   }) : super(key: key);
 
   @override
@@ -29,28 +26,48 @@ const List<String> lista = <String>[
   'dos',
   'tres'
 ]; //Datos que se mostrararn en el combobox
-String? selectedValue;
+String? selectedNombre;
 String? imageurl;
+String? insertDescripcion;
+DateTime selectedDate = DateTime.now();
 
 class _ActualizarState extends State<Actualizar> {
-  File? imagen_to_upload;
-  late String nombre;
-  late String descripcion;
+  late List<Map<String, dynamic>> dataList = [];
+  late File _image;
+  late String? nombre;
+  late String? descripcion;
   late DateTime fecha;
-  late String imagenurl;
+  late String? imageurl;
+  File? imagen_to_upload;
+  late String lid;
+
+  List<Result>? _lista;
+  //String fondo = "lib/image/icono.png";
+  Future<void> loadLibros() async {
+    LibroService service = LibroService();
+    _lista = await service.getLibros();
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    nombre = widget.nombre;
-    descripcion = widget.descripcion;
-    fecha = widget.fecha;
-    imagenurl = widget.imagenurl;
+    lid = widget.lid;
+    _fetchData();
+    loadLibros();
+  }
+
+  Future<void> _fetchData() async {
+    dataList = await getDataById(lid);
+    setState(() {
+      selectedNombre = dataList[0]['nombre'];
+      insertDescripcion = dataList[0]['descripcion'];
+    });
   }
 
   String dropdownValue = lista.first;
-  late DateTime selectedDate = DateTime.now();
-  late File _image;
 
   final picker = ImagePicker();
 
@@ -64,22 +81,32 @@ class _ActualizarState extends State<Actualizar> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(BuildContext context, DateTime initialDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: fecha,
+      initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != fecha) {
+    if (picked != null && picked != selectedDate) {
       setState(() {
-        fecha = picked;
+        selectedDate = picked;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (dataList.isEmpty) {
+      return CircularProgressIndicator();
+    } else {
+      // Usar dataList para acceder a sus valores
+      nombre = dataList[0]['nombre'];
+      descripcion = dataList[0]['descripcion'];
+      fecha = (dataList[0]['fecha'] as Timestamp).toDate();
+      imageurl = dataList[0]['imagen'];
+      //selectedNombre = nombre;
+    }
     return Padding(
       padding: EdgeInsets.zero,
       child: Scaffold(
@@ -121,24 +148,25 @@ class _ActualizarState extends State<Actualizar> {
                     ),
                   ],
                 ),
-                items: lista
-                    .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ))
-                    .toList(),
-                value: nombre,
+                items: _lista?.map((Result libro) {
+                  return DropdownMenuItem<String>(
+                    value: libro.title
+                        .toString(), // Usar el título del libro como valor
+                    child: Text(
+                      libro.title.toString(),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                value: selectedNombre,
                 onChanged: (String? value) {
                   setState(() {
-                    selectedValue = value!;
+                    selectedNombre = value!;
                   });
                 },
                 buttonStyleData: ButtonStyleData(
@@ -196,7 +224,7 @@ class _ActualizarState extends State<Actualizar> {
                   ),
                   onChanged: (value) {
                     setState(() {
-                      descripcion = value;
+                      insertDescripcion = value;
                     });
                   },
                   // Agrega tus propiedades personalizadas aquí
@@ -207,7 +235,7 @@ class _ActualizarState extends State<Actualizar> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 30),
                 child: InkWell(
-                  onTap: () => _selectDate(context),
+                  onTap: () => _selectDate(context, fecha),
                   child: Container(
                     padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
@@ -241,15 +269,18 @@ class _ActualizarState extends State<Actualizar> {
               ElevatedButton(
                 onPressed: () async {
                   if (imagen_to_upload == null) {
-                    return;
+                    await updateLibro(lid, selectedNombre, insertDescripcion,
+                        selectedDate, imageurl);
+                  } else {
+                    imageurl = await uploadImage(imagen_to_upload!);
+
+                    await updateLibro(lid, selectedNombre, insertDescripcion,
+                        selectedDate, imageurl);
                   }
 
-                  imageurl = await uploadImage(imagen_to_upload!);
+                  widget.refreshPage();
 
-                  await addLibro(
-                      selectedValue, descripcion, selectedDate, imageurl);
-
-                  Navigator.pop(context, true);
+                  Navigator.pop(context);
                 }, // Call the _saveData function
                 child: Text("Actualizar"), // Button text
               )
