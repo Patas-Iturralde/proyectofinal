@@ -85,8 +85,8 @@ class _ActualizarState extends State<Actualizar> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      firstDate: DateTime(1500),
+      lastDate: DateTime(2024),
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -178,7 +178,7 @@ class _ActualizarState extends State<Actualizar> {
                     border: Border.all(
                       color: Colors.black26,
                     ),
-                    color: Colors.deepPurple,
+                    color: Colors.brown[300],
                   ),
                   elevation: 2,
                 ),
@@ -192,10 +192,10 @@ class _ActualizarState extends State<Actualizar> {
                 ),
                 dropdownStyleData: DropdownStyleData(
                   maxHeight: 200,
-                  width: 200,
+                  width: 350,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    color: Colors.deepPurple,
+                    color: Colors.brown[300],
                   ),
                   offset: const Offset(-20, 0),
                   scrollbarTheme: ScrollbarThemeData(
@@ -245,7 +245,7 @@ class _ActualizarState extends State<Actualizar> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("${fecha.toLocal()}".split(' ')[0]),
+                        Text("${selectedDate.toLocal()}".split(' ')[0]),
                         Icon(Icons.calendar_today),
                       ],
                     ),
@@ -263,7 +263,14 @@ class _ActualizarState extends State<Actualizar> {
                           imagen_to_upload = File(image!.path);
                         });
                       },
+                      
                       child: Text("Seleccionar Imagen")),
+                      imagen_to_upload != null
+                      ? Image.file(
+                          imagen_to_upload!,
+                          height: 150,
+                        )
+                      : SizedBox(height: 150),
                 ],
               ),
               ElevatedButton(

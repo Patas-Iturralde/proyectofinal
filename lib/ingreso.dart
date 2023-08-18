@@ -73,7 +73,7 @@ class _IngresoState extends State<Ingreso> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              const Text("Marca:    "),
+              const Text("Titulo:    "),
               DropdownButton2(
                 isExpanded: true,
                 hint: const Row(
@@ -129,7 +129,7 @@ class _IngresoState extends State<Ingreso> {
                     border: Border.all(
                       color: Colors.black26,
                     ),
-                    color: Colors.deepPurple,
+                    color: Colors.brown[300],
                   ),
                   elevation: 2,
                 ),
@@ -143,10 +143,10 @@ class _IngresoState extends State<Ingreso> {
                 ),
                 dropdownStyleData: DropdownStyleData(
                   maxHeight: 200,
-                  width: 200,
+                  width: 350,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    color: Colors.deepPurple,
+                    color: Colors.brown[300],
                   ),
                   offset: const Offset(-20, 0),
                   scrollbarTheme: ScrollbarThemeData(
@@ -168,7 +168,7 @@ class _IngresoState extends State<Ingreso> {
                 child: TextFormField(
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.deepPurple),
+                      borderSide: BorderSide(color: Colors.brown),
                     ),
                     labelText: 'Ingrese la descripcion',
                   ),
@@ -189,7 +189,7 @@ class _IngresoState extends State<Ingreso> {
                   child: Container(
                     padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.deepPurple),
+                      border: Border.all(color: Colors.brown),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Row(
@@ -203,7 +203,7 @@ class _IngresoState extends State<Ingreso> {
                 ),
               ),
               SizedBox(height: 20),
-              Text("Foto:    "),
+            Text("Foto:    "),
               Column(
                 children: [
                   ElevatedButton(
@@ -214,6 +214,12 @@ class _IngresoState extends State<Ingreso> {
                         });
                       },
                       child: Text("Seleccionar Imagen")),
+                  imagen_to_upload != null
+                      ? Image.file(
+                          imagen_to_upload!,
+                          height: 150,
+                        )
+                      : SizedBox(height: 150),
                 ],
               ),
               ElevatedButton(
@@ -228,8 +234,8 @@ class _IngresoState extends State<Ingreso> {
                       selectedValue, descripcion, selectedDate, imageurl);
 
                   Navigator.pop(context, true);
-                }, // Call the _saveData function
-                child: Text("Guardar"), // Button text
+                },
+                child: Text("Guardar"),
               ),
             ],
           ),
