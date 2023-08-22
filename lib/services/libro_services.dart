@@ -32,14 +32,14 @@ Future<List> getLibro() async {
   return libro;
 }
 
-Future<void> addLibro(String? nombre, String? descripcion,
-    DateTime selectedDate, String? imagen) async {
-  Timestamp timestamp = Timestamp.fromDate(selectedDate);
-  await db.collection("libro").add({
-    "nombre": nombre,
-    "descripcion": descripcion,
-    "fecha": timestamp,
-    "imagen": imagen
+Future<void> addLibro(String nombre, String descripcion, DateTime fecha, String imagenUrl, double precio, String numeroTelefono) async {
+  await FirebaseFirestore.instance.collection('libros').add({
+    'nombre': nombre,
+    'descripcion': descripcion,
+    'fecha': fecha,
+    'imagen': imagenUrl,
+    'precio': precio,
+    'numeroTelefono': numeroTelefono,
   });
 }
 
@@ -57,13 +57,15 @@ Future<List<Map<String, dynamic>>> getDataById(String documentId) async {
 }
 
 Future<void> updateLibro(String lid, String? nombre, String? descripcion,
-    DateTime selectedDate, String? imagen) async {
+    DateTime selectedDate, String? imagen, String? precio, String? numeroTelefono) async {
   Timestamp timestamp = Timestamp.fromDate(selectedDate);
   await db.collection("libro").doc(lid).set({
     "nombre": nombre,
     "descripcion": descripcion,
     "fecha": timestamp,
-    "imagen": imagen
+    "imagen": imagen,
+    'precio': precio,
+    'numeroTelefono': numeroTelefono,
   });
 }
 
@@ -74,7 +76,7 @@ Future<void> deleteLibro(String lid) async {
 class LibroService {
   LibroService();
 
-  Future<List<Result>?> getLibros() async {
+  Future<List<Object>?> getLibros() async {
     List<Result> result = [];
     try {
       var url = Uri.https('gutendex.com', '/books');
@@ -104,6 +106,8 @@ class LibroService {
       }
       return result;
     } catch (ex) {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('libros').get();
+  return querySnapshot.docs;
       developer.log(ex.toString());
       return null;
     }

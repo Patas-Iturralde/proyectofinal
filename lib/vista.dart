@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:segundointento/actualizar.dart';
 import 'package:segundointento/services/libro_services.dart';
-import 'package:intl/intl.dart';
 
 class Vista extends StatefulWidget {
   const Vista({Key? key}) : super(key: key);
@@ -47,8 +47,6 @@ showConfirmDelete(BuildContext context, String lid) {
       print("Eliminando..");
 
       Navigator.pop(context, true);
-
-      //Funcion de eliminar
     },
   );
 
@@ -99,6 +97,8 @@ class _VistaState extends State<Vista> {
                       var fecha = doc['fecha'];
                       var imagenurl = doc['imagen'];
                       var fechaLanzamiento = fecha.toDate();
+                      var precio = doc['precio'] != null ? doc['precio'].toString() : 'N/A';
+                      var numeroTelefono = doc['numeroTelefono'] != null ? doc['numeroTelefono'] : 'N/A';
 
                       // Formatear la fecha usando Intl
                       var formattedFechaLanzamiento =
@@ -111,32 +111,40 @@ class _VistaState extends State<Vista> {
                           ListTile(
                             leading: Image.network(imagenurl),
                             title: Text("$descripcion"),
-                            subtitle: Text("$formattedFechaLanzamiento"),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("$formattedFechaLanzamiento"),
+                                Text("Precio: $precio"),
+                                Text("Teléfono: $numeroTelefono"),
+                              ],
+                            ),
                             trailing: SizedBox(
-                                width: 100,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => Navigator.of(context)
-                                          .push(MaterialPageRoute(
-                                              builder: (context) => Actualizar(
-                                                    lid: lid,
-                                                    refreshPage: _refreshData,
-                                                  ))),
-                                      icon: Icon(Icons.edit),
+                              width: 100,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  IconButton(
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => Actualizar(
+                                          lid: lid,
+                                          refreshPage: _refreshData,
+                                        ),
+                                      ),
                                     ),
-                                    IconButton(
-                                      onPressed: () async {
-                                        (
-                                          showConfirmDelete(context, lid),
-                                          _refreshData()
-                                        );
-                                      },
-                                      icon: Icon(Icons.delete),
-                                    ),
-                                  ],
-                                )),
+                                    icon: Icon(Icons.edit),
+                                  ),
+                                  IconButton(
+                                    onPressed: () async {
+                                      showConfirmDelete(context, lid);
+                                      _refreshData();
+                                    },
+                                    icon: Icon(Icons.delete),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                           const Divider(),
                         ],

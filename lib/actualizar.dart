@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:segundointento/ingreso.dart';
 import 'package:segundointento/services/libro_services.dart';
 import 'package:segundointento/services/select_image.dart';
 import 'package:segundointento/services/upload_image.dart';
@@ -41,44 +42,19 @@ class _ActualizarState extends State<Actualizar> {
   File? imagen_to_upload;
   late String lid;
 
-  List<Result>? _lista;
-  //String fondo = "lib/image/icono.png";
-  Future<void> loadLibros() async {
-    LibroService service = LibroService();
-    _lista = await service.getLibros();
-    if (mounted) {
-      setState(() {});
-    }
-  }
+  String? numeroTelefono; // Número de teléfono ingresado
+  double? precio; // Precio ingresado
 
-  @override
-  void initState() {
-    super.initState();
-    lid = widget.lid;
-    _fetchData();
-    loadLibros();
-  }
+  List<Result>? _lista;
 
   Future<void> _fetchData() async {
     dataList = await getDataById(lid);
     setState(() {
       selectedNombre = dataList[0]['nombre'];
       insertDescripcion = dataList[0]['descripcion'];
+      numeroTelefono = dataList[0]['numeroTelefono'];
+      precio = dataList[0]['precio'];
     });
-  }
-
-  String dropdownValue = lista.first;
-
-  final picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
   }
 
   Future<void> _selectDate(BuildContext context, DateTime initialDate) async {
@@ -93,6 +69,25 @@ class _ActualizarState extends State<Actualizar> {
         selectedDate = picked;
       });
     }
+  }
+
+  final picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    lid = widget.lid;
+    _fetchData();
   }
 
   @override
@@ -114,7 +109,7 @@ class _ActualizarState extends State<Actualizar> {
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Row(
             children: [
-              Title(color: Colors.cyan, child: const Text("Actualizar"))
+              Title(color: Colors.cyan, child: const Text("Actualizar")),
             ],
           ),
         ),
@@ -148,22 +143,18 @@ class _ActualizarState extends State<Actualizar> {
                     ),
                   ],
                 ),
-                items: _lista?.map((Result libro) {
-                  return DropdownMenuItem<String>(
-                    value: libro.title
-                        .toString(), // Usar el título del libro como valor
-                    child: Text(
-                      libro.title.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).toList(),
-                value: selectedNombre,
+                items: lista
+                    .map((String item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                value: selectedValue,
                 onChanged: (String? value) {
                   setState(() {
                     selectedNombre = value!;
@@ -253,19 +244,59 @@ class _ActualizarState extends State<Actualizar> {
                 ),
               ),
               SizedBox(height: 20),
+              Text("Número de Teléfono:    "),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30),
+                child: TextFormField(
+                  keyboardType: TextInputType.phone,
+                  initialValue: numeroTelefono,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                    labelText: 'Ingrese el número de teléfono',
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      numeroTelefono = value;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              Text("Precio:    "),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30),
+                child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  initialValue: precio?.toString(),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                    labelText: 'Ingrese el precio',
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      precio = double.tryParse(value);
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
               Text("Foto:    "),
               Column(
                 children: [
                   ElevatedButton(
-                      onPressed: () async {
-                        final image = await getImage();
-                        setState(() {
-                          imagen_to_upload = File(image!.path);
-                        });
-                      },
-                      
-                      child: Text("Seleccionar Imagen")),
-                      imagen_to_upload != null
+                    onPressed: () async {
+                      final image = await getImage();
+                      setState(() {
+                        imagen_to_upload = File(image!.path);
+                      });
+                    },
+                    child: Text("Seleccionar Imagen"),
+                  ),
+                  imagen_to_upload != null
                       ? Image.file(
                           imagen_to_upload!,
                           height: 150,
@@ -276,20 +307,34 @@ class _ActualizarState extends State<Actualizar> {
               ElevatedButton(
                 onPressed: () async {
                   if (imagen_to_upload == null) {
-                    await updateLibro(lid, selectedNombre, insertDescripcion,
-                        selectedDate, imageurl);
+                    await updateLibro(
+                      lid,
+                      selectedNombre,
+                      insertDescripcion,
+                      selectedDate,
+                      numeroTelefono!,
+                      precio.toString(),
+                      imageurl,
+                    );
                   } else {
                     imageurl = await uploadImage(imagen_to_upload!);
 
-                    await updateLibro(lid, selectedNombre, insertDescripcion,
-                        selectedDate, imageurl);
+                    await updateLibro(
+                      lid,
+                      selectedNombre,
+                      insertDescripcion,
+                      selectedDate,
+                      numeroTelefono!,
+                      precio.toString(),
+                      imageurl,
+                    );
                   }
 
                   widget.refreshPage();
 
                   Navigator.pop(context);
-                }, // Call the _saveData function
-                child: Text("Actualizar"), // Button text
+                },
+                child: Text("Actualizar"),
               )
             ],
           ),

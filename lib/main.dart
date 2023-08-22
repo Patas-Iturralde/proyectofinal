@@ -85,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/biblioteca.jpg"),
+            image: AssetImage("assets/tienda.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               SizedBox(height: 80,),
               Text(
-                'Sistema bibliotecario',
+                'Tienda virtual',
                 style: TextStyle(color: Colors.white, fontSize: 30, backgroundColor: Color.fromARGB(101, 71, 71, 71)),
               ),
               // Aquí puedes agregar más widgets si es necesario
